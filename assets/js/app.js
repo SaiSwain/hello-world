@@ -193,6 +193,11 @@ const showListData = (listData, listContainer) => {
     })
 }
 
+
+
+
+
+
 const displayCV = (userData) => {
     nameDsp.innerHTML = userData.firstname + " " + userData.middlename + " " + userData.lastname;
     phonenoDsp.innerHTML = userData.phoneno;
@@ -214,15 +219,354 @@ const generateCV = () => {
     console.log(userData);
 }
 
-function previewImage(){
-    let oFReader = new FileReader();
-    oFReader.readAsDataURL(imageElem.files[0]);
-    oFReader.onload = function(ofEvent){
-        imageDsp.src = ofEvent.target.result;
-    }
+
+
+// Add event listeners for keyup events on the input fields
+firstnameElem.addEventListener('keyup', () => generateName());
+middlenameElem.addEventListener('keyup', () => generateName());
+lastnameElem.addEventListener('keyup', () => generateName());
+
+function generateName() {
+  const firstName = firstnameElem.value;
+  const middleName = middlenameElem.value;
+  const lastName = lastnameElem.value;
+
+  // Combine the names and convert to camel case
+const inputName = `${firstName}  ${middleName}  ${lastName}`; // Note the double spaces
+const cleanedName = inputName.replace(/\s+/g, ' ').trim(); // Replace multiple spaces with a single space
+const fullName = cleanedName.split(' ')
+    .map((word, index) => {
+      // Convert the first word to lowercase and the rest to title case
+      if (index === 0) {
+        return word.toLowerCase();
+      } else {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      }
+    })
+    .join(' ');
+
+  // Display the full name in camel case
+  const camelCaseName = fullName.charAt(0).toUpperCase() + fullName.slice(1);
+  nameDsp.textContent = camelCaseName;
 }
+
+
+// function generateName() {
+//   const firstName = document.querySelector(".firstname").value;
+//   const middleName = document.querySelector(".middlename").value;
+//   const lastName = document.querySelector(".lastname").value;
+
+//   // Combine the names and convert to camel case
+//   const fullName = `${firstName} ${middleName} ${lastName}`.split(' ')
+//       .map((word, index) => {
+//           // Convert the first word to lowercase and the rest to title case
+//           if (index === 0) {
+//               return word.toLowerCase();
+//           } else {
+//               return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+//           }
+//       })
+//       .join('');
+
+//   // Display the full name
+//   document.querySelector("#fullname_dsp").textContent = fullName;
+// }
+
+// function previewImage(){
+//     let oFReader = new FileReader();
+//     oFReader.readAsDataURL(imageElem.files[0]);
+//     oFReader.onload = function(ofEvent){
+//         imageDsp.src = ofEvent.target.result;
+//     }
+// }
+// function deleteImage() {
+//   // Clear the image source and reset the input field
+//   document.getElementById('image_dsp').src = '';
+//   document.getElementById('input-1').value = '';
+// }
+
+function previewImage() {
+  let oFReader = new FileReader();
+  oFReader.readAsDataURL(imageElem.files[0]);
+  oFReader.onload = function (ofEvent) {
+      let imageSource = ofEvent.target.result;
+
+      // Update the first image in the preview-image container
+      document.getElementById('image_dsp').src = imageSource;
+
+      // Update the second image inside the form-elem container and remove the background image
+      let image_dsp2 = document.getElementById('image_dsp2');
+      image_dsp2.style.backgroundImage = 'none'; // Remove the background image
+      image_dsp2.src = imageSource; // Set the selected image
+
+      // Hide the default picture image
+      document.getElementById('default-image').style.display = 'none';
+  }
+}
+
+function deleteImage() {
+  // Clear the image source and reset the input field
+  document.getElementById('image_dsp').src = '';
+  document.getElementById('image_dsp2').src = ''; // Clear the second image source
+  document.getElementById('input-1').value = '';
+
+  // Show the default picture image
+  document.getElementById('default-image').style.display = 'block';
+}
+
+function triggerFileInput() {
+  document.getElementById('input-1').click(); // Trigger the file input click event
+}
+
+
+
 
 // print CV
 function printCV(){
     window.print();
 }
+
+
+
+// add multiple section part
+
+  const sectionButtons = document.querySelectorAll('.section-button');
+const columnContainers = document.querySelectorAll('.column');
+const aggregatedTextContainer = document.querySelector('#aggregated-text-container');
+
+sectionButtons.forEach((button, index) => {
+  button.addEventListener('click', () => {
+    const sectionName = button.getAttribute('data-section');
+    const currentColumn = columnContainers[index];
+
+    // Hide all existing input containers
+    const existingInputContainers = currentColumn.querySelectorAll('.input-container');
+    existingInputContainers.forEach(container => {
+      container.classList.add('hidden');
+    });
+
+    // Find the last input container and show it
+    const lastInputContainer = existingInputContainers[existingInputContainers.length - 1];
+    if (lastInputContainer) {
+      lastInputContainer.classList.remove('hidden');
+    }
+
+    // Create a new input container and append it to the current column
+    const newInputContainer = createInputContainer(sectionName);
+    currentColumn.appendChild(newInputContainer);
+
+    const inputField = newInputContainer.querySelector('input');
+    const addBtn = newInputContainer.querySelector(`.add-${sectionName.toLowerCase()}-btn`);
+    const deleteBtn = newInputContainer.querySelector('.delete-btn');
+
+    inputField.addEventListener('input', () => {
+      const text = inputField.value.trim();
+      if (text) {
+        const newDisplayContainer = document.createElement('div');
+        newDisplayContainer.classList.add('display-container');
+        newDisplayContainer.textContent = `${sectionName}: ${text}`;
+        aggregatedTextContainer.appendChild(newDisplayContainer);
+
+        // Clear the input field
+        inputField.value = '';
+      }
+    });
+
+    deleteBtn.addEventListener('click', () => {
+      newInputContainer.remove();
+    });
+  });
+});
+
+// Handle adding more containers
+document.addEventListener('click', event => {
+  if (event.target.classList.contains('add-more-course-btn')) {
+    const addMoreBtn = event.target;
+    const inputContainer = addMoreBtn.closest('.input-container');
+    const duplicateInputContainer = inputContainer.cloneNode(true);
+    const newInputField = duplicateInputContainer.querySelector('input');
+
+    // Clear the value of the input field to avoid duplicating text
+    if (newInputField) {
+      newInputField.value = '';
+    }
+
+    inputContainer.parentElement.insertBefore(duplicateInputContainer, inputContainer.nextSibling);
+
+    // Attach delete button listener to the new container
+    const deleteBtn = duplicateInputContainer.querySelector('.delete-btn');
+    deleteBtn.addEventListener('click', () => {
+      duplicateInputContainer.remove();
+    });
+  }
+});
+
+function createInputContainer(sectionName) {
+  const newInputContainer = document.createElement('div');
+  newInputContainer.classList.add('input-container');
+  newInputContainer.innerHTML = `
+    <input type="text" placeholder="${sectionName} item">
+    <button class="add-${sectionName.toLowerCase()}-btn">Add ${sectionName}</button>
+    <button class="delete-btn">Delete</button>
+  `;
+
+  const addBtn = newInputContainer.querySelector(`.add-${sectionName.toLowerCase()}-btn`);
+  addBtn.addEventListener('click', () => {
+    const newContainer = createInputContainer(sectionName);
+    newInputContainer.parentElement.insertBefore(newContainer, newInputContainer.nextSibling);
+  });
+
+  return newInputContainer;
+}
+
+
+function updateRightSideContent() {
+  const displayContainers = document.querySelectorAll(".display-container");
+  const inputContainers = document.querySelectorAll('.input-container');
+
+  inputContainers.forEach((container, index) => {
+    const h1Text = container.querySelector('h1').textContent;
+
+    // Create a new div to hold input field values
+    const inputValuesDiv = document.createElement('div');
+
+    container.querySelectorAll('.input-field').forEach((inputField) => {
+      const inputValue = inputField.value;
+      const inputLabel = inputField.getAttribute('placeholder');
+      const inputText = `<p><strong>${inputLabel}:</strong> ${inputValue}</p>`;
+      inputValuesDiv.innerHTML += inputText;
+    });
+
+    displayContainers[index].innerHTML = `<h1>${h1Text}</h1>${inputValuesDiv.innerHTML}`;
+  });
+}
+
+// custome section drag and droup 
+
+document.addEventListener("DOMContentLoaded", () => {
+  const leftSide = document.getElementById("leftSide");
+  const rightSide = document.getElementById("rightSide");
+  let displayContainers = document.querySelectorAll(".display-container");
+
+  const sortable = new Sortable(leftSide, {
+    animation: 150,
+    handle: ".draggable-content",
+    onEnd: () => {
+      updateRightSideContent();
+    }
+  });
+
+  leftSide.querySelectorAll('.input-container input, .input-container textarea, .input-container .date-input').forEach((input, index) => {
+    input.addEventListener("input", () => {
+      updateRightSideContent();
+    });
+  });
+
+  const dateInputs = document.querySelectorAll(".date-input");
+  dateInputs.forEach(dateInput => {
+    flatpickr(dateInput);
+  });
+
+  function updateRightSideContent() {
+    const inputContainers = leftSide.querySelectorAll('.input-container');
+    const reorderedDisplayContainers = Array.from(inputContainers).map(container => {
+      const heading = container.querySelector('h3[contenteditable="true"]').textContent;
+      const inputValues = Array.from(container.querySelectorAll('input, textarea, .date-input')).map(input => input.value);
+  
+      const textContent = inputValues
+        .filter(value => value.trim() !== '')
+        .join('<br>'); // Use <br> to separate input values
+  
+      return `<h3>${heading}</h3><p>${textContent}</p>`;
+    });
+  
+    // Check if there is any content in the reorderedDisplayContainers
+    const hasContent = reorderedDisplayContainers.some(containerContent => containerContent.trim() !== '');
+  
+    if (hasContent) {
+      displayContainers.forEach((container, index) => {
+        container.innerHTML = reorderedDisplayContainers[index];
+      });
+    } else {
+      // If no content, clear the right side display containers
+      displayContainers.forEach(container => {
+        container.innerHTML = ''; // Clear the content
+      });
+    }
+  }
+  
+
+  // Initially clear the right side display containers
+  displayContainers.forEach(container => {
+    container.innerHTML = '';
+  });
+});
+
+// end custome section drag and droup section
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const leftSide = document.getElementById("leftSide1");
+  const rightSide = document.getElementById("rightSide1");
+  let displayContainers = document.querySelectorAll(".display-container1");
+
+  const sortable = new Sortable(leftSide, {
+    animation: 150,
+    handle: ".draggable-content",
+    onEnd: () => {
+      updateRightSideContent();
+    }
+  });
+
+  leftSide.querySelectorAll('.input-container input, .input-container textarea, .input-container .date-input').forEach((input, index) => {
+    input.addEventListener("input", () => {
+      updateRightSideContent();
+    });
+  });
+
+  const dateInputs = document.querySelectorAll(".date-input");
+  dateInputs.forEach(dateInput => {
+    flatpickr(dateInput);
+  });
+  // function updateRightSideContent() {
+  //   const inputContainers = leftSide.querySelectorAll('.input-container');
+  //   const reorderedDisplayContainers = Array.from(inputContainers).map(container => {
+  //     const heading = container.querySelector('h3').textContent;
+  //     const inputValues = Array.from(container.querySelectorAll('input, textarea, .date-input')).map(input => {
+  //       if (input.value.trim() !== '') {
+  //         return `<p>${input.value}</p>`; // Wrap each input value in its own <p> element
+  //       }
+  //       return ''; // Empty string if the input is empty
+  //     }).join('');
+
+  //     return `<h3>${heading}</h3>${inputValues}`;
+  //   });
+
+  //   displayContainers.forEach((container, index) => {
+  //     container.innerHTML = reorderedDisplayContainers[index];
+  //   });
+  // }
+  function updateRightSideContent() {
+    const inputContainers = leftSide.querySelectorAll('.input-container');
+    const reorderedDisplayContainers = Array.from(inputContainers).map(container => {
+      const heading = container.querySelector('h3').textContent;
+      const inputValues = Array.from(container.querySelectorAll('input, textarea, .date-input')).map(input => {
+        if (input.value.trim() !== '') {
+          if (input.classList.contains('date-input')) {
+            return `<span class="date-value">${input.value}</span>`; // Use a span element for date values
+          }
+          return `<p>${input.value}</p>`; // Wrap other input values in <p> elements
+        }
+        return ''; // Empty string if the input is empty
+      }).join('');
+  
+      return `<h3>${heading}</h3>${inputValues}`;
+    });
+  
+    displayContainers.forEach((container, index) => {
+      container.innerHTML = reorderedDisplayContainers[index];
+    });
+  }
+  
+});
+
